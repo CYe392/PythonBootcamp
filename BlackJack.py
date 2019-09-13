@@ -2,6 +2,9 @@
 A simplified BlackJack game
 '''
 class Player:
+    '''
+    Player class
+    '''
     def __init__(self, name, balance):
         self.name = name
         self.balance = balance
@@ -26,8 +29,8 @@ class Player:
             else:
                 playerchoice = input('Do you want a new card? y/n').lower()
 
-    def dealerplay(self, cards):
-        while self.bestscore() <17:
+    def dealerplay(self, cards, threshold = 17):
+        while self.bestscore() < threshold:
             self.hit(cards)
             print(self.cards)
         else:
@@ -70,16 +73,12 @@ class Player:
             print(f'Player {self.name} gets knocked out!')
 
 class Board:
-    def __init__(self, name, decks):
-        self.name = name
+    def __init__(self, decks):
         self.decks = decks
         self.players = []
         self.cards = []
         self.betamount = 0
         self.addplayer(Player('Dealer', 0))
-        
-    def __str__(self):
-        return f'Table {self.name}'
 
     def addplayer(self, player):
         self.players.append(player)
@@ -93,24 +92,27 @@ class Board:
         self.cards = list(range(1, 14))*self.decks
         random.shuffle(self.cards)    
 
-    def evaluate(self, dealerscore):
-        if dealerscore == 21:
-            print('Dealer gets BlackJack! All players lose')
-            for player in self.players[1:]:
-                player.lose(self.betamount)
-                if player.balance <= 0:
-                    self.players.pop(player)
-        elif dealerscore == 0:
-            print('Dealer gets blusted!')
-            for player in self.players[1:]:
-                if player.status != 'Blust':
-                    player.win(self.betamount)
-                else:
-                    player.lose(self.betamount)
-                    if player.balance <= 0:
-                        self.players.pop(player)
-        else:
-            print(f'Dealer score: {dealerscore}')
+    def play(self):
+        self.showbalance()
+        self.shuffle()
+        for player in self.players[1:]:
+            player.newgame()
+            if len(self.cards) < 6:
+                self.shuffle()
+            print(f'Player {player.name}"s turn')
+            player.play(self.cards)
+        print('Dealer"s turn')
+        self.players[0].dealerplay(self.cards)
+        evaluate(self.players[0].bestscore())
+        self.showbalance()
+
+        def evaluate(self, dealerscore):
+            if dealerscore == 21:
+                print('Dealer gets BlackJack! All players lose')
+            elif dealerscore == 0:
+                print('Dealer gets blusted!')
+            else:
+                print(f'Dealer score: {dealerscore}')
             for player in self.players[1:]:
                 if player.status == 'Blust':
                     print(f'Player {player.name} is blusted')
@@ -128,13 +130,14 @@ class Board:
                         if player.balance <= 0:
                             self.players.pop(player)
 
-    def play(self):
+    def showbalance(self):
+        print('Balances:')
         for player in self.players[1:]:
-            if player.status == 'Play':
-                if len(self.cards) < 6:
-                    self.shuffle()
-                print(f'Player {player.name}"s turn')
-                player.play(self.cards)
-        print('Dealer"s turn')
-        self.players[0].dealerplay(self.cards)
-        self.evaluate(self.players[0].bestscore())
+            print(f'{player.name}: {player.balance}')
+
+#if __name__ == '__init__':
+board = Board(2)
+board.addplayer(Player('a', 3))
+board.addplayer(Player('b', 2))
+board.addplayer(Player('c', 1))
+board.play()
